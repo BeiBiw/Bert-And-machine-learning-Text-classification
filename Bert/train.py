@@ -41,7 +41,7 @@ class EarlyStopping:
             print(f"Validation metric improved. Saving model...")
         torch.save(model.state_dict(), "best_model.pth")
 
-# 数据集
+
 class BertDataset(Dataset):
     def __init__(self, texts, labels, tokenizer, max_len=128):
         self.texts = texts
@@ -66,7 +66,7 @@ class BertDataset(Dataset):
         attention_mask = tokens["attention_mask"].squeeze(0)
         return input_ids, attention_mask, torch.tensor(label, dtype=torch.long)
 
-# 训练函数
+
 def train_bert_model(model, train_loader, val_loader, epochs, lr, patience):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -75,7 +75,6 @@ def train_bert_model(model, train_loader, val_loader, epochs, lr, patience):
     early_stopping = EarlyStopping(patience=patience, mode="min", verbose=True)
 
     for epoch in range(epochs):
-        # 训练阶段
         model.train()
         train_loss, train_correct, train_total = 0, 0, 0
         train_loader_tqdm = tqdm(train_loader, desc=f"Epoch {epoch + 1} - Training")
@@ -96,7 +95,6 @@ def train_bert_model(model, train_loader, val_loader, epochs, lr, patience):
         train_loss /= train_total
         train_accuracy = train_correct / train_total
 
-        # 验证阶段
         model.eval()
         val_loss, val_correct, val_total = 0, 0, 0
         all_true_labels, all_pred_labels = [], []
@@ -125,17 +123,13 @@ def train_bert_model(model, train_loader, val_loader, epochs, lr, patience):
         print(f"  Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.4%}")
         print(f"  Val Precision: {val_precision:.4%}, Val Recall: {val_recall:.4%}, Val F1 Score: {val_f1:.4f}")
 
-        # 检查早停条件
         early_stopping(val_loss, model)
         if early_stopping.early_stop:
             print("Early stopping triggered. Training stopped.")
             break
-
-    # 加载最佳模型
     model.load_state_dict(torch.load("best_model.pth"))
     return model
 
-# 测试函数
 def tttest_bert_model(model, test_loader):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -181,21 +175,19 @@ epochs = 10
 
 class Config:
     def __init__(self, n_vocab, embed, num_filters, filter_sizes, num_classes, dropout, embedding_pretrained=None):
-        self.n_vocab = n_vocab  # 词汇表大小
-        self.embed = embed  # 词向量维度
-        self.num_filters = num_filters  # 每种卷积核的输出通道数
-        self.filter_sizes = filter_sizes  # 卷积核大小列表
-        self.num_classes = num_classes  # 类别数
-        self.dropout = dropout  # Dropout比率
-        self.embedding_pretrained = embedding_pretrained  # 预训练嵌入
+        self.n_vocab = n_vocab
+        self.embed = embed
+        self.filter_sizes = filter_sizes
+        self.num_classes = num_classes
+        self.dropout = dropout  # Dropout
+        self.embedding_pretrained = embedding_pretrained
 
 config = Config(
-    n_vocab=n_vocab,  # 词汇表大小
-    embed=256,  # 嵌入维度（可根据需求调整）
-    num_filters=100,  # 卷积通道数
-    filter_sizes=[3, 4, 5],  # 卷积核大小
-    num_classes=7,  # 类别数
-    dropout=0.3,  # Dropout比率
+    n_vocab=n_vocab,
+    embed=256,
+    filter_sizes=[3, 4, 5],
+    num_classes=7,
+    dropout=0.3,
     embedding_pretrained=None,
 )
 train_data, train_label = load_data("../../data/new_data/train.csv")
